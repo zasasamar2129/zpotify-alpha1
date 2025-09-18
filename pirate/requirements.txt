@@ -1,0 +1,19 @@
+# Telegram Bot
+python-telegram-bot
+python-dotenv
+
+# Media Downloaders
+yt-dlp
+instaloader
+praw>=7.7.0
+pytube
+spotipy
+
+# Utils
+requests
+beautifulsoup4
+aiohttp
+aiofiles
+tqdm>=4.66.1
+validators>=0.20.0
+psutil

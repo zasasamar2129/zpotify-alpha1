@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4 bot-control-card">
+    <!-- card content -->
+</div>
+    <h2 class="mb-4"><i class="bi bi-robot"></i> Bot Control Panel</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Start Bot Card -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white h5">
+                    <i class="bi bi-play-circle"></i> <strong>Start Bot</strong>
+                </div>
+                <div class="card-body text-center">
+                    <p class="card-text" style="font-size:13px;">Start the bot process with "python3 -m mbot"</p>
+                    <form method="POST" action="{{ url_for('bot_control') }}" onsubmit="return confirmAction('start')">
+                        <input type="hidden" name="action" value="start">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-play-circle"></i> Start Bot
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Restart Bot Card -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white h5">
+                    <i class="bi bi-arrow-clockwise"></i> <strong>Restart Bot</strong>
+                </div>
+                <div class="card-body text-center">
+                    <p class="card-text" style="font-size:13px;">Gracefully restart the bot process</p>
+                    <form method="POST" action="{{ url_for('bot_control') }}" onsubmit="return confirmAction('restart')">
+                        <input type="hidden" name="action" value="restart">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-arrow-clockwise"></i> Restart
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Shutdown Bot Card -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white h5">
+                    <i class="bi bi-power"></i><strong>Shutdown Bot</strong>
+                </div>
+                <div class="card-body text-center">
+                    <p class="card-text" style="font-size:13px;">Gracefully stop the bot process</p>
+                    <form method="POST" action="{{ url_for('bot_control') }}" onsubmit="return confirmAction('shutdown')">
+                        <input type="hidden" name="action" value="shutdown">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-power"></i> Shutdown
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Force Kill Card -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white h5">
+                    <i class="bi bi-exclamation-octagon"></i><strong>Force Kill</strong>
+                </div>
+                <div class="card-body text-center">
+                    <p class="card-text" style="font-size:13px;">Forcefully terminate the bot process</p>
+                    <form method="POST" action="{{ url_for('bot_control') }}" onsubmit="return confirmAction('force_kill')">
+                        <input type="hidden" name="action" value="force_kill">
+                        <button type="submit" class="btn btn-dark btn-lg">
+                            <i class="bi bi-exclamation-octagon"></i> Force Kill
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Clear Session Card -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark h5">
+                    <i class="bi bi-trash"></i><strong>Clear Session</strong>
+                </div>
+                <div class="card-body text-center">
+                    <p class="card-text" style="font-size:13px;">Delete session file and force re-login</p>
+                    <form method="POST" action="{{ url_for('bot_control') }}" onsubmit="return confirmAction('clear_session')">
+                        <input type="hidden" name="action" value="clear_session">
+                        <button type="submit" class="btn btn-warning btn-lg">
+                            <i class="bi bi-trash"></i> Clear Session
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Card -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-terminal"></i> Bot Process Status
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Current Status:</h5>
+                            <span class="badge bg-{{ 'success' if stats.bot_running else 'danger' }} fs-6">
+                                {{ 'Running' if stats.bot_running else 'Stopped' }}
+                            </span>
+                            {% if stats.bot_running and stats.bot_pid %}
+                                <p class="text-muted mt-2"><small>PID: {{ stats.bot_pid }}</small></p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h5>System Uptime:</h5>
+                            <p>{{ stats.boot_time }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+// Confirm actions before submitting
+function confirmAction(action) {
+    const messages = {
+        'start': 'Are you sure you want to start the bot?',
+        'restart': 'Are you sure you want to restart the bot?',
+        'shutdown': 'Are you sure you want to shutdown the bot?',
+        'force_kill': 'WARNING: This will forcefully terminate the bot process. Are you sure?',
+        'clear_session': 'Are you sure you want to clear the session file? This will log out the bot.'
+    };
+    
+    if (confirm(messages[action])) {
+        // Disable the button to prevent double submission
+        event.target.disabled = true;
+        event.target.innerHTML = '<i class="bi bi-arrow-repeat"></i> Processing...';
+        return true;
+    }
+    return false;
+}
+
+</script>
+<script src="{{ url_for('static', filename='js/bot_control.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Display ZACO logo
+# Display banner
+echo -e "$BLUE"
+echo "╔══════════════════════════════════════════╗"
+echo "║                                          ║"
+echo "║  ██   ██ ███████ ██      ██      ██████  ║"
+echo "║  ██   ██ ██      ██      ██     ██    ██ ║"
+echo "║  ███████ █████   ██      ██     ██    ██ ║"
+echo "║  ██   ██ ██      ██      ██     ██    ██ ║"
+echo "║  ██   ██ ███████ ███████ ███████ ██████  ║"
+echo "║                                          ║"
+echo "║      Z A C O   B O T   S Y S T E M       ║"
+echo "║                                          ║"
+echo "╚══════════════════════════════════════════╝"
+echo -e "$NC"
+
+# Function to ask for confirmation
+ask_confirm() {
+    local prompt=$1
+    read -p "$(echo -e "$prompt [y/N] ")" -n 1 -r
+    echo
+    [[ $REPLY =~ ^[Yy]$ ]]
+}
+
+
+confirm() {
+    while true; do
+        read -rp "$(echo -e "${YELLOW}$1 [y/N] ${NC}")" yn
+        case $yn in
+            [Yy]* ) return 0;;
+            [Nn]* ) return 1;;
+            * ) echo -e "${RED}Please answer y or n${NC}";;
+        esac
+    done
+}
+
+# Function to start service
+start_service() {
+    local name="$1"
+    local cmd="$2"
+    local dir="$3"
+    
+    echo -e "${YELLOW}[*] Starting $name...${NC}"
+    
+    if [ "$USE_SCREEN" = true ]; then
+        if screen -list | grep -q "$name"; then
+            echo -e "${YELLOW}[!] $name is already running in screen${NC}"
+        else
+            screen -dmS "$name" bash -c "cd $dir && $cmd"
+            sleep 1
+            if screen -list | grep -q "$name"; then
+                echo -e "${GREEN}[✓] $name started in screen${NC}"
+                echo -e "${BLUE}   Attach with: screen -r $name${NC}"
+            else
+                echo -e "${RED}[×] Failed to start in screen! Trying direct execution...${NC}"
+                cd "$dir" && $cmd &
+                echo -e "${GREEN}[✓] $name started directly in background${NC}"
+            fi
+        fi
+    else
+        cd "$dir" && $cmd &
+        echo -e "${GREEN}[✓] $name started directly in background${NC}"
+    fi
+}
+
+# Start services
+start_service "zaco_main" "python3 -m mbot" 
+start_service "zaco_web" "python3 app.py" "/zpotify1/Web-admin"
+
+# Display status
+echo -e "\n${YELLOW}===========================================${NC}"
+echo -e "${GREEN}          Services Status               ${NC}"
+echo -e "${YELLOW}===========================================${NC}"
+
+if [ "$USE_SCREEN" = true ]; then
+    echo -e "${BLUE}Screen sessions:${NC}"
+    screen -list || echo -e "${RED}No screen sessions found${NC}"
+else
+    echo -e "${YELLOW}Running in direct mode (no screen)${NC}"
+    echo -e "Check processes with: ps aux | grep python"
+fi
+
+echo -e "\n${YELLOW}Management commands:${NC}"
+if [ "$USE_SCREEN" = true ]; then
+    echo -e "  Attach to session: ${GREEN}screen -r <name>${NC}"
+    echo -e "  Detach: ${GREEN}Ctrl+A then D${NC}"
+    echo -e "  Stop all: ${GREEN}./stop.sh${NC}"
+else
+    echo -e "  View processes: ${GREEN}ps aux | grep python${NC}"
+    echo -e "  Stop processes: ${GREEN}pkill -f 'python3 -m mbot' && pkill -f 'python3 app.py'${NC}"
+fi
+
+# Display help message
+echo -e "${YELLOW}===========================================${NC}"
+echo -e "${GREEN}          Services Started!            ${NC}"
+echo -e "${YELLOW}===========================================${NC}"
+echo -e "${BLUE}Active screen sessions:${NC}"
+screen -list
+echo ""
+echo -e "${YELLOW}Useful commands:${NC}"
+echo -e "  - To list all screen sessions: ${GREEN}screen -list${NC}"
+echo -e "  - To attach to a session: ${GREEN}screen -r <session_name>${NC}"
+echo -e "  - To detach from a session: ${GREEN}Ctrl+A then D${NC}"
+echo -e "  - To kill a session: ${GREEN}screen -X -S <session_name> quit${NC}"
+echo ""

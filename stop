@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+echo -e "${RED}Stopping all ZACO services...${NC}"
+
+# Try screen first if available
+if command -v screen &> /dev/null; then
+    screen -S zaco_main -X quit 2>/dev/null && echo -e "${GREEN}Stopped zaco_main${NC}" || echo -e "${RED}No zaco_main screen session${NC}"
+    screen -S zaco_web -X quit 2>/dev/null && echo -e "${GREEN}Stopped zaco_web${NC}" || echo -e "${RED}No zaco_web screen session${NC}"
+fi
+
+# Fallback to pkill
+pkill -f "python3 -m mbot" && echo -e "${GREEN}Stopped main bot process${NC}"
+pkill -f "python3 app.py" && echo -e "${GREEN}Stopped web admin process${NC}"
+
+echo -e "${GREEN}All services stopped${NC}"

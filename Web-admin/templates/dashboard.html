@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div id="dashboard-alerts"></div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div><i class="bi bi-speedometer2"></i> System Status</div>
+                    <button id="manual-refresh" class="btn btn-sm btn-outline-light" title="Refresh Dashboard">
+                        <i class="bi bi-arrow-clockwise"></i> 
+                        <span class="ms-1 d-none d-sm-inline">Refresh</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <!-- Compact Bot Controls -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">Bot Controls:</h5>
+                                <span id="bot-status" class="badge bg-{{ 'success' if stats.bot_running else 'danger' }}">
+                                    {{ 'Running' if stats.bot_running else 'Stopped' }}
+                                    {% if stats.bot_running and stats.bot_pid %}
+                                        <span id="bot-pid" class="ms-1">(PID: {{ stats.bot_pid }})</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="btn-group btn-group-sm w-100 btn-icon" role="group">
+                                <form method="POST" action="{{ url_for('bot_control') }}" class="flex-fill">
+                                    <input type="hidden" name="action" value="start">
+                                    <button type="submit" class="btn btn-outline-primary" title="Start Bot" onclick="return confirmAction('start')">
+                                        <i class="bi bi-play"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('bot_control') }}" class="flex-fill">
+                                    <input type="hidden" name="action" value="restart">
+                                    <button type="submit" class="btn btn-outline-success" title="Restart Bot" onclick="return confirmAction('restart')">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('bot_control') }}" class="flex-fill">
+                                    <input type="hidden" name="action" value="shutdown">
+                                    <button type="submit" class="btn btn-outline-danger" title="Shutdown Bot" onclick="return confirmAction('shutdown')">
+                                        <i class="bi bi-power"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('bot_control') }}" class="flex-fill">
+                                    <input type="hidden" name="action" value="force_kill">
+                                    <button type="submit" class="btn btn-outline-dark" title="Force Kill" onclick="return confirmAction('force_kill')">
+                                        <i class="bi bi-exclamation-octagon"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('bot_control') }}" class="flex-fill">
+                                    <input type="hidden" name="action" value="clear_session">
+                                    <button type="submit" class="btn btn-outline-warning" title="Clear Session" onclick="return confirmAction('clear_session')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3 vert-pad">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">CPU Usage</h5>
+                                    <div class="progress">
+                                        <div id="cpu-usage-bar" class="progress-bar bg-{{ 'danger' if stats.cpu > 80 else 'warning' if stats.cpu > 50 else 'success' }}" 
+                                             role="progressbar" style="width: {{ stats.cpu }}%">
+                                            <span id="cpu-usage">{{ stats.cpu }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Memory Usage</h5>
+                                    <div class="progress">
+                                        <div id="memory-usage-bar" class="progress-bar bg-{{ 'danger' if stats.memory > 80 else 'warning' if stats.memory > 50 else 'success' }}" 
+                                             role="progressbar" style="width: {{ stats.memory }}%">
+                                            <span id="memory-usage">{{ stats.memory }}%</span>
+                                        </div>
+                                    </div>
+                                    <small><span id="memory-used">{{ stats.memory_used }}</span>GB / <span id="memory-total">{{ stats.memory_total }}</span>GB</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Disk Usage</h5>
+                                    <div class="progress">
+                                        <div id="disk-usage-bar" class="progress-bar bg-{{ 'danger' if stats.disk > 80 else 'warning' if stats.disk > 50 else 'success' }}" 
+                                             role="progressbar" style="width: {{ stats.disk }}%">
+                                            <span id="disk-usage">{{ stats.disk }}%</span>
+                                        </div>
+                                    </div>
+                                    <small><span id="disk-used">{{ stats.disk_used }}</span>GB / <span id="disk-total">{{ stats.disk_total }}</span>GB</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3 vert-pad">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">System Uptime</h5>
+                                    <p id="boot-time" class="mb-0">{{ stats.boot_time }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-wifi"></i> Network Status
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Download Speed</h5>
+                                    <h2 id="download-speed">{{ network.download }} Mbps</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Upload Speed</h5>
+                                    <h2 id="upload-speed">{{ network.upload }} Mbps</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3 vert-pad">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Ping</h5>
+                                    <h2 id="ping-time">{{ network.ping }} ms</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Maintenance</h5>
+                                    <span id="maintenance-status" class="badge bg-{{ 'danger' if maintenance else 'success' }}">
+                                        {{ 'ON' if maintenance else 'OFF' }}
+                                    </span>
+                                    <div class="mt-2">
+                                        <a id="maintenance-btn" href="{{ url_for('maintenance') }}" class="btn btn-sm btn-{{ 'success' if maintenance else 'danger' }}">
+                                            {{ 'Disable' if maintenance else 'Enable' }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-graph-up"></i> Bot Statistics
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card text-white bg-success mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Total Users</h5>
+                                    <h2 id="total-users">{{ bot_stats.get('total_users', 0) }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-info mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Active Today</h5>
+                                    <h2 id="active-today">{{ bot_stats.get('active_today', 0) }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-warning mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Files Served</h5>
+                                    <h2 id="files-served">{{ bot_stats.get('files_served', 0) }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-danger mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Banned Users</h5>
+                                    <h2 id="banned-users">{{ bot_stats.get('banned_users', 0) }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+// Confirm actions before submitting
+function confirmAction(action) {
+    const messages = {
+        'start': 'Do you wish to start the bot"?',
+        'restart': 'Restart the bot? This will temporarily interrupt service.',
+        'shutdown': 'Shutdown the bot?',
+        'force_kill': 'WARNING: Force kill will immediately terminate the bot. Continue?',
+        'clear_session': 'Clear session file? This will log out the bot.'
+    };
+    return confirm(messages[action]);
+}
+</script>
+{% endblock %}

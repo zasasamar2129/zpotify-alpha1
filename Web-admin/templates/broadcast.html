@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-megaphone"></i> Send Broadcast Message
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('broadcast') }}">
+                    {# CSRF token if using Flask-WTF #}
+                    {% if csrf_token %}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% endif %}
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="6" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Formatting</label>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor('message', '<b>', '</b>')">
+                                <i class="bi bi-type-bold"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor('message', '<i>', '</i>')">
+                                <i class="bi bi-type-italic"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor('message', '<code>', '</code>')">
+                                <i class="bi bi-code"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor('message', '<a href=\'https://\'>', '</a>')">
+                                <i class="bi bi-link"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-send"></i> Send Broadcast
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <i class="bi bi-info-circle"></i> Broadcast Information
+            </div>
+            <div class="card-body">
+                <h5>Recipients:</h5>
+                <p>{{ users|length }} users will receive this message</p>
+                
+                <h5 class="mt-4">Last Broadcast:</h5>
+                <p>{% if last_broadcast %}{{ last_broadcast }}{% else %}No broadcasts yet{% endif %}</p>
+                
+                <div class="alert alert-warning mt-4">
+                    <i class="bi bi-exclamation-triangle"></i> Broadcasts may take time to deliver to all users.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Inserts the given prefix/suffix around selected text
+function insertAtCursor(textareaId, prefix, suffix) {
+    const textarea = document.getElementById(textareaId);
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    textarea.value = textarea.value.substring(0, start) + prefix + selected + suffix + textarea.value.substring(end);
+    textarea.focus();
+    textarea.selectionStart = textarea.selectionEnd = start + prefix.length + selected.length;
+}
+</script>
+{% endblock %}

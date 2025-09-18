@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <i class="bi bi-tools"></i> Maintenance Mode
+            </div>
+            <div class="card-body text-center">
+                <h4 class="card-title mb-4">
+                    Current Status: 
+                    <span class="badge bg-{{ 'danger' if status else 'success' }}">
+                        {{ 'ON' if status else 'OFF' }}
+                    </span>
+                </h4>
+                
+                <form method="POST" action="{{ url_for('maintenance') }}">
+                    <div class="mb-3">
+                        <label for="maintenance_message" class="form-label">Maintenance Message</label>
+                        <textarea class="form-control" id="maintenance_message" name="maintenance_message" rows="3">
+                            {{ 'The bot is currently under maintenance. Please try again later.' if status else '' }}
+                        </textarea>
+                    </div>
+                    
+                    <input type="hidden" name="status" value="{{ 'false' if status else 'true' }}">
+                    
+                    <button type="submit" class="btn btn-{{ 'success' if status else 'danger' }} btn-lg">
+                        <i class="bi bi-{{ 'check-circle' if status else 'exclamation-triangle' }}"></i>
+                        {{ 'Disable' if status else 'Enable' }} Maintenance Mode
+                    </button>
+                </form>
+                
+                <div class="mt-4 alert alert-info">
+                    <i class="bi bi-info-circle"></i> When maintenance mode is enabled, only admins can use the bot.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Your HTML content remains the same -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Convert template variables to JS values safely
+    const initialStats = {
+        cpu: parseFloat("{{ stats.cpu | default(0) | tojson }}"),
+        memory: parseFloat("{{ stats.memory | default(0) | tojson }}"),
+        memory_used: parseFloat("{{ stats.memory_used | default(0) | tojson }}"),
+        memory_total: parseFloat("{{ stats.memory_total | default(0) | tojson }}"),
+        disk: parseFloat("{{ stats.disk | default(0) | tojson }}"),
+        disk_used: parseFloat("{{ stats.disk_used | default(0) | tojson }}"),
+        disk_total: parseFloat("{{ stats.disk_total | default(0) | tojson }}")
+    };
+
+    const initialNetwork = {
+        download: parseFloat("{{ network.download | default(0) | tojson }}"),
+        upload: parseFloat("{{ network.upload | default(0) | tojson }}"),
+        ping: parseFloat("{{ network.ping | default(0) | tojson }}")
+    };
+
+    // Chart initialization helper
+    function initLineChart(ctx, color, label, initialValue) {
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [{
+                    label: label,
+                    data: Array(20).fill(initialValue),
+                    borderColor: color,
+                    backgroundColor: color + '20',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 100 },
+                    x: { display: false }
+                },
+                plugins: { legend: { display: false } },
+                animation: { duration: 0 }
+            }
+        });
+    }
+
+    // CPU Chart
+    const cpuChart = initLineChart(
+        document.getElementById('cpuChart').getContext('2d'),
+        '#4e73df',
+        'CPU Usage %',
+        initialStats.cpu
+    );
+
+    // Memory Chart
+    const memoryCtx = document.getElementById('memoryChart').getContext('2d');
+    const memoryChart = new Chart(memoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Used', 'Free'],
+            datasets: [{
+                data: [initialStats.memory, 100 - initialStats.memory],
+                backgroundColor: ['#1cc88a', '#eaeaea'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { 
+                    callbacks: { 
+                        label: function(ctx) {
+                            return ctx.label + ': ' + ctx.raw + '%';
+                        }
+                    } 
+                }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Disk Chart
+    const diskCtx = document.getElementById('diskChart').getContext('2d');
+    const diskChart = new Chart(diskCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Used', 'Free'],
+            datasets: [{
+                data: [initialStats.disk, 100 - initialStats.disk],
+                backgroundColor: ['#36b9cc', '#eaeaea'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { 
+                    callbacks: { 
+                        label: function(ctx) {
+                            return ctx.label + ': ' + ctx.raw + '%';
+                        }
+                    } 
+                }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Network Chart
+    const networkCtx = document.getElementById('networkChart').getContext('2d');
+    const networkChart = new Chart(networkCtx, {
+        type: 'line',
+        data: {
+            labels: Array(20).fill(''),
+            datasets: [
+                {
+                    label: 'Download (Mbps)',
+                    data: Array(20).fill(initialNetwork.download),
+                    borderColor: '#4e73df',
+                    backgroundColor: '#4e73df20',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Upload (Mbps)',
+                    data: Array(20).fill(initialNetwork.upload),
+                    borderColor: '#1cc88a',
+                    backgroundColor: '#1cc88a20',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true },
+                x: { display: false }
+            },
+            plugins: { legend: { position: 'top' } },
+            animation: { duration: 0 }
+        }
+    });
+
+    // Single update function
+    async function updateCharts() {
+        try {
+            const [statsRes, networkRes] = await Promise.all([
+                fetch('/api/stats'),
+                fetch('/api/network')
+            ]);
+            
+            const stats = await statsRes.json();
+            const network = await networkRes.json();
+
+            // CPU update
+            cpuChart.data.datasets[0].data.push(stats.cpu);
+            if (cpuChart.data.datasets[0].data.length > 20) {
+                cpuChart.data.datasets[0].data.shift();
+            }
+            cpuChart.update();
+
+            // Memory update
+            memoryChart.data.datasets[0].data = [stats.memory, 100 - stats.memory];
+            memoryChart.update();
+
+            // Disk update
+            diskChart.data.datasets[0].data = [stats.disk, 100 - stats.disk];
+            diskChart.update();
+
+            // Network update
+            networkChart.data.datasets[0].data.push(network.download);
+            networkChart.data.datasets[1].data.push(network.upload);
+            
+            if (networkChart.data.datasets[0].data.length > 20) {
+                networkChart.data.datasets[0].data.shift();
+                networkChart.data.datasets[1].data.shift();
+            }
+            networkChart.update();
+
+            // Update real-time stats display
+            document.querySelector('.col-md-3:nth-child(1) h2').textContent = stats.cpu + '%';
+            document.querySelector('.col-md-3:nth-child(2) h2').textContent = stats.memory + '%';
+            document.querySelector('.col-md-3:nth-child(2) small').textContent = 
+                stats.memory_used + 'GB / ' + stats.memory_total + 'GB';
+            document.querySelector('.col-md-3:nth-child(3) h2').textContent = stats.disk + '%';
+            document.querySelector('.col-md-3:nth-child(3) small').textContent = 
+                stats.disk_used + 'GB / ' + stats.disk_total + 'GB';
+            document.querySelector('.col-md-3:nth-child(4) h2').textContent = network.ping + ' ms';
+            
+        } catch (error) {
+            console.error('Failed to update charts:', error);
+        }
+    }
+
+    // Update every 2 seconds for better real-time feel
+    setInterval(updateCharts, 2000);
+});
+</script>
+{% endblock %}

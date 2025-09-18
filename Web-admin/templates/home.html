@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="home-hero">
+    <div class="container py-4">  <!-- Changed from py-5 to py-4 for smaller height -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <!-- Logo with rounded borders and subtle shadow -->
+                <div class="mb-4">
+                    <img src="https://i.postimg.cc/DzjZhPH2/zaco.png" 
+                    alt="ZPOTIFY Logo" 
+                    class="img-fluid rounded-circle shadow-sm" 
+                    style="width: 120px; height: 120px; object-fit: contain;"
+                    loading="lazy">
+                </div>
+                <!-- Headings -->
+                <h1 class="display-5 fw-bold mb-3 text-gradient-primary">Welcome to ZACO Panel</h1>  <!-- Changed from display-4 to display-5 -->
+                <p class="lead mb-4 text-muted">Powerful administration interface for your Telegram bot</p>  <!-- Reduced margin-bottom -->
+                
+                <!-- Auth state section -->
+                <div class="d-flex gap-3 justify-content-center">
+                    {% if not current_user.is_authenticated %}
+                        <a href="{{ url_for('login') }}" 
+                           class="btn btn-primary btn-lg px-4 py-2 rounded-pill shadow-sm hover-animate"  
+                           aria-label="Login to your account">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Get Started
+                        </a>
+                        <a href="#" 
+                           class="btn btn-outline-primary btn-lg px-4 py-2 rounded-pill shadow-sm hover-animate" 
+                           aria-label="Get help"
+                           data-bs-toggle="modal" data-bs-target="#helpModal">
+                            <i class="bi bi-question-circle me-2"></i> Need Help?
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('dashboard') }}" 
+                           class="btn btn-success btn-lg px-4 py-2 rounded-pill shadow-sm hover-animate"
+                           aria-label="Go to dashboard">
+                            <i class="bi bi-speedometer2 me-2"></i> Go to Dashboard
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Features Section -->
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card feature-card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-shield-lock fs-1 text-primary"></i>
+                    </div>
+                    <h3 class="h4 mb-3">Secure Access</h3>
+                    <p class="text-muted">Enterprise-grade security with role-based access control and activity logging.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-graph-up fs-1 text-primary"></i>
+                    </div>
+                    <h3 class="h4 mb-3">Real-time Analytics</h3>
+                    <p class="text-muted">Monitor your bot's performance with comprehensive dashboards and reports.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-sliders fs-1 text-primary"></i>
+                    </div>
+                    <h3 class="h4 mb-3">Easy Configuration</h3>
+                    <p class="text-muted">Intuitive interface for managing bot settings and user permissions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="helpModalLabel">Need Help?</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6 class="mb-3">Getting Started</h6>
+                <p>To access the admin panel, you'll need valid credentials provided by your system administrator.</p>
+                
+                <h6 class="mb-3 mt-4">Contact Support</h6>
+                <p>For assistance, please contact:</p>
+                <ul class="list-unstyled">
+                    </li>
+                        <i class="bi bi-envelope me-2"></i>
+                        <a href="mailto:zasasamar@hotmail.com">zasasamar@hotmail.com</a>
+                    </li>
+                    <li>
+                       <i class="bi bi-telegram me-2"></i> 
+                       <a href="https://t.me/itachi2129">@itachi2129</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.home-logo {
+    max-height: 120px;
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+.home-logo:hover {
+    transform: scale(1.05);
+}
+
+.home-hero {
+    background: linear-gradient(135deg, rgba(78,115,223,0.1) 0%, rgba(255,255,255,0.85) 100%);
+    border-radius: 25px;
+    margin: 2rem auto;
+    padding: 2rem 1rem;
+    max-width: 900px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.1s forwards;
+    will-change: opacity, transform;
+    animation-fill-mode: forwards;
+    animation-play-state: running;
+    pointer-events: auto;
+}
+body.modal-open {
+    padding-right: 0 !important;
+    
+}
+body.modal-open .home-hero {
+    transition: none !important;
+}
+
+
+@keyframes fadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.home-hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('/static/img/pattern.png') repeat;
+    opacity: 0.05;
+    z-index: -1;
+    border-radius: 24px;
+}
+
+.text-gradient-primary {
+    background: linear-gradient(to right, #4e73df, #224abe);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}
+
+.hover-animate {
+    transition: all 0.3s ease;
+}
+
+.hover-animate:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.feature-card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Dark mode adjustments */
+.dark-mode .home-hero {
+    background: linear-gradient(135deg, rgba(78,115,223,0.2) 0%, rgba(45,55,72,0.8) 100%);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+}
+
+.dark-mode .home-hero::before {
+    opacity: 0.1;
+}
+
+.dark-mode .feature-card {
+    background-color: #2d3748;
+    border: 1px solid #4a5568;
+}
+
+.dark-mode .feature-card:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important;
+}
+</style>
+{% endblock %}

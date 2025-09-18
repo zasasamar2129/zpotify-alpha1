@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-gear"></i> Configuration Editor
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('config_editor') }}">
+            <div class="mb-3">
+                <label for="config" class="form-label">config.env</label>
+                <textarea class="form-control font-monospace" id="config" name="config" rows="20" style="font-size: 0.9rem;">{{ config }}</textarea>
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary me-md-2">
+                    <i class="bi bi-save"></i> Save Changes
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('config').value = `{{ config }}`">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Incorrect configuration may cause the bot to malfunction. Make sure you know what you're changing.
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('config');
+    
+    // Auto-resize textarea
+    textarea.style.height = 'auto';
+    textarea.style.height = (textarea.scrollHeight) + 'px';
+    
+    // Syntax highlighting (basic)
+    textarea.addEventListener('input', function() {
+        const lines = this.value.split('\n');
+        let html = '';
+        
+        lines.forEach(line => {
+            if (line.trim().startsWith('#')) {
+                html += `<span style="color: #6c757d;">${line}</span>\n`;
+            } else if (line.includes('=')) {
+                const parts = line.split('=');
+                html += `<span style="color: #0d6efd;">${parts[0]}</span>=<span style="color: #198754;">${parts.slice(1).join('=')}</span>\n`;
+            } else {
+                html += `${line}\n`;
+            }
+        });
+        
+        // This is just for demonstration - in a real app you'd use a proper syntax highlighter
+        // and a contenteditable div instead of a textarea
+    });
+});
+</script>
+{% endblock %}

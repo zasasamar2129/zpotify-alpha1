@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-text-paragraph"></i> Text Customization
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('text_customization') }}">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Select Language</label>
+                    <select class="form-select" id="languageSelect">
+                        {% for code, name in languages.items() %}
+                        <option value="{{ code }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Text Type</label>
+                    <select class="form-select" id="textTypeSelect">
+                        <option value="help">Help Text</option>
+                        <option value="stats">Stats Text</option>
+                        <option value="start">Start Message</option>
+                        <option value="maintenance">Maintenance Message</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="customText" class="form-label">Custom Text</label>
+                <textarea class="form-control" id="customText" name="customText" rows="10"></textarea>
+                <div class="form-text">You can use HTML formatting in your text.</div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary me-md-2">
+                    <i class="bi bi-save"></i> Save Changes
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="previewBtn">
+                    <i class="bi bi-eye"></i> Preview
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset to Default
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Text Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- Preview will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

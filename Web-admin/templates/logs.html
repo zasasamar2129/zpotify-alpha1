@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-journal-text"></i> Bot Logs
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <form class="d-flex">
+                    <select class="form-select me-2" id="logLevel">
+                        <option value="all">All Levels</option>
+                        <option value="debug">Debug</option>
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                    <button type="button" class="btn btn-outline-primary" id="filterLogs">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <form class="d-flex">
+                    <input type="text" class="form-control me-2" id="logSearch" placeholder="Search logs...">
+                    <button type="button" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary" id="refreshLogs">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="downloadLogs">
+                        <i class="bi bi-download"></i> Download
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="clearLogs">
+                        <i class="bi bi-trash"></i> Clear
+                    </button>
+                    <button type="button" class="btn btn-outline-success" id="liveLogsToggle">
+                        <i class="bi bi-play-circle"></i> Live
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body p-0">
+                <pre class="p-3 mb-0 bg-dark text-white" style="min-height: 500px; max-height: 500px; overflow-y: auto;" id="logContent">{{ logs }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const logContent = document.getElementById('logContent');
+    let liveLogsInterval = null;
+    const liveLogsToggle = document.getElementById('liveLogsToggle');
+    const refreshLogsBtn = document.getElementById('refreshLogs');
+    
+    // Auto-scroll to bottom
+    logContent.scrollTop = logContent.scrollHeight;
+    
+    // Function to fetch and update logs
+    function fetchLogs() {
+        fetch('/api/logs')
+            .then(response => response.text())
+            .then(text => {
+                logContent.textContent = text;
+                logContent.scrollTop = logContent.scrollHeight;
+            })
+            .catch(error => {
+                console.error('Error fetching logs:', error);
+                if (liveLogsInterval) {
+                    clearInterval(liveLogsInterval);
+                    liveLogsInterval = null;
+                    liveLogsToggle.innerHTML = '<i class="bi bi-play-circle"></i> Live';
+                    liveLogsToggle.classList.remove('btn-success');
+                    liveLogsToggle.classList.add('btn-outline-success');
+                }
+            });
+    }
+    
+    // Refresh logs
+    refreshLogsBtn.addEventListener('click', fetchLogs);
+    
+    // Toggle live logs
+    liveLogsToggle.addEventListener('click', function() {
+        if (liveLogsInterval) {
+            // Stop live updates
+            clearInterval(liveLogsInterval);
+            liveLogsInterval = null;
+            this.innerHTML = '<i class="bi bi-play-circle"></i> Live';
+            this.classList.remove('btn-success');
+            this.classList.add('btn-outline-success');
+        } else {
+            // Start live updates
+            fetchLogs(); // Immediate refresh
+            liveLogsInterval = setInterval(fetchLogs, 5000); // Refresh every 5 seconds
+            this.innerHTML = '<i class="bi bi-stop-circle"></i> Live';
+            this.classList.remove('btn-outline-success');
+            this.classList.add('btn-success');
+        }
+    });
+    
+    // Download logs
+    document.getElementById('downloadLogs').addEventListener('click', function() {
+        const blob = new Blob([logContent.textContent], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'bot_logs_' + new Date().toISOString().replace(/[:.]/g, '-') + '.log';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+    
+    // Filter logs
+    document.getElementById('filterLogs').addEventListener('click', function() {
+        const level = document.getElementById('logLevel').value;
+        // Implement filtering (would need server-side support)
+    });
+});
+</script>
+{% endblock %}

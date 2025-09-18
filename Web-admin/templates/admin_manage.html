@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-person-plus"></i> Add/Remove Admin
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin_manage') }}">
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">User ID</label>
+                        <input type="text" class="form-control" id="user_id" name="user_id" required>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" name="action" value="add" class="btn btn-success me-md-2">
+                            <i class="bi bi-person-plus"></i> Add Admin
+                        </button>
+                        <button type="submit" name="action" value="remove" class="btn btn-danger">
+                            <i class="bi bi-person-dash"></i> Remove Admin
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <i class="bi bi-people-fill"></i> Current Admin Users
+            </div>
+            <div class="card-body">
+                {% if sudo_users %}
+                <div class="list-group">
+                    {% for user_id in sudo_users %}
+                    <div class="list-group-item">
+                        User ID: {{ user_id }}
+                        <span class="badge bg-primary float-end">Admin</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">No admin users found.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-warning text-dark">
+        <i class="bi bi-exclamation-triangle"></i> Important Notes
+    </div>
+    <div class="card-body">
+        <ul>
+            <li>Admin users have full control over the bot</li>
+            <li>Only add trusted users as admins</li>
+            <li>The owner (OWNER_ID) cannot be removed</li>
+            <li>Changes take effect after bot restart</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
